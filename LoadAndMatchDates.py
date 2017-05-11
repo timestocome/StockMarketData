@@ -43,115 +43,83 @@ def read_data(file_name):
 # load and combine stock indexes 
 
 
-dow_jones = read_data('data/djia.csv')
-print("Loaded DJIA", len(dow_jones))
+def load_and_combine_data():
 
-s_p = read_data('data/S&P.csv')
-print("Loaded S&P", len(s_p))
+    dow_jones = read_data('data/djia.csv')
+    s_p = read_data('data/S&P.csv')
+    russell_2000 = read_data('data/Russell2000.csv')
+    nasdaq = read_data('data/nasdaq.csv')
+    vix = read_data('data/VIX.csv')
 
-russell_2000 = read_data('data/Russell2000.csv')
-print("Loaded Russell", len(russell_2000))
+    # gdp is only listed once a quarter  in missing days and fill missing with previous
+    gdp = read_data('data/US_GDP.csv')
+    gdp = gdp.resample("B").bfill()
 
-nasdaq = read_data('data/nasdaq.csv')
-print("Loaded NASDAQ", len(nasdaq))
+    # a few missing values in here
+    gold = read_data('data/GOLD.csv')
+    gold = gold.interpolate()
 
+    unemployment = read_data('data/Unemployment.csv')
+    unemployment = unemployment.resample("B").bfill()
 
-# VIX index that attempts to measure volatility of S&P, 
-# sometimes called 'fear index'
-vix = read_data('data/VIX.csv')
-print("Loaded VIX", len(vix))
+    real_gdp = read_data('data/RealGDP.csv')
+    real_gdp = real_gdp.resample("B").bfill()
 
-# gdp is only listed once a quarter  in missing days and fill missing with previous
-gdp = read_data('data/US_GDP.csv')
-# print(gdp)
-gdp = gdp.resample("B").bfill()
-print("Loaded GDP, added missing day, filled in data")
+    # government closed some days when stock markets are open
+    # fill in missing values using interpolation of surrounding values
+    treasury = read_data('data/1yrTreasury.csv')
+    treasury = treasury.interpolate()
 
-
-# a few missing values in here
-gold = read_data('data/GOLD.csv')
-gold = gold.interpolate()
-print("Loaded Gold", len(gold))
-
-
-unemployment = read_data('data/Unemployment.csv')
-unemployment = unemployment.resample("B").bfill()
-print("loaded Unemployment", len(unemployment))
+    # interpolate doesn't work here - all the dates have values until we
+    # merge with the rest of the data - have to fill missing dates first
+    bond = read_data('data/10yrbond.csv')
+    bond = bond.resample("B").interpolate()
 
 
-real_gdp = read_data('data/RealGDP.csv')
-real_gdp = real_gdp.resample("B").bfill()
-print("loaded real gdp", len(real_gdp))
+    # rename columns before joining so we know which is which
+    dow_jones.columns = ['DJIA']
+    s_p.columns = ['S&P']
+    russell_2000.columns = ['Russell 2000']
+    nasdaq.columns = ["NASDAQ"]
+    vix.columns = ['VIX']
+    gdp.columns = ['US GDP']
+    real_gdp.columns = ['Real GDP']
+    unemployment.columns = ['UnEmploy']
+    gold.columns = ['Gold']
+    treasury.columns = ['1yr Treasury']
+    bond.columns = ['10yr Bond']
+
+    # combine by matching date index, missing dates will get NaN
+    indexes = dow_jones.join(s_p)
+    indexes = indexes.join(russell_2000)
+    indexes = indexes.join(nasdaq)
+    indexes = indexes.join(vix)
+    indexes = indexes.join(gdp)
+    indexes = indexes.join(gold)
+    indexes = indexes.join(treasury)
+    indexes = indexes.join(bond)
+    indexes = indexes.join(real_gdp)
+    indexes = indexes.join(unemployment)
 
 
 
+    # trim dates, VIX, Russell don't go back far,
+    # dates were left in earlier to all computations going back and forward in time
+    indexes = indexes.loc[indexes.index > '01-01-1990']
+    indexes = indexes.loc[indexes.index < '12-31-2016']
 
-# government closed some days when stock markets are open
-# fill in missing values using interpolation of surrounding values
-treasury = read_data('data/1yrTreasury.csv')
-treasury = treasury.interpolate()
-print("loaded 1 yr treasury", len(treasury))
+    '''
+    # compare indexes
+    (indexes / indexes.ix[0] * 100).plot(figsize=(20,15))
+    plt.title("Standarized Indexes 1990-2016")
+    plt.savefig("StandardizedData.png")
+    plt.show()
+    '''
 
-# interpolate doesn't work here - all the dates have values until we
-# merge with the rest of the data - have to fill missing dates first
-bond = read_data('data/10yrbond.csv')
-bond = bond.resample("B").interpolate()
-print("loaded 10 yr bond", len(bond))
-
-
-
-
-
-# rename columns before joining so we know which is which
-dow_jones.columns = ['DJIA']
-s_p.columns = ['S&P']
-russell_2000.columns = ['Russell 2000']
-nasdaq.columns = ["NASDAQ"]
-vix.columns = ['VIX']
-gdp.columns = ['US GDP']
-real_gdp.columns = ['Real GDP']
-unemployment.columns = ['UnEmploy']
-gold.columns = ['Gold']
-treasury.columns = ['1yr Treasury']
-bond.columns = ['10yr Bond']
-
-
-# combine by matching date index, missing dates will get NaN
-indexes = dow_jones.join(s_p)
-indexes = indexes.join(russell_2000)
-indexes = indexes.join(nasdaq)
-indexes = indexes.join(vix)
-indexes = indexes.join(gdp)
-indexes = indexes.join(gold)
-indexes = indexes.join(treasury)
-indexes = indexes.join(bond)
-indexes = indexes.join(real_gdp)
-indexes = indexes.join(unemployment)
-
-# print(indexes)
-
-
-'''
-# combine stock indexes into one dataframe all at once renaming columns as we go
-data = pd.concat([dow_jones['Open'], s_p['Open'], russell_2000['Open'], nasdaq['Open']], axis=1, keys=['dow_jones', 'S&P', 'russell_2000', 'nasdaq'])
-'''
-
-# trim dates, VIX, Russell don't go back far,
-# dates were left in earlier to all computations going back and forward in time
-indexes = indexes.loc[indexes.index > '01-01-1990']
-indexes = indexes.loc[indexes.index < '12-31-2016']
-
-print(indexes)
+    # save file
+    indexes.to_csv("StockData.csv")
 
 
 
 
-
-
-# compare indexes
-(indexes / indexes.ix[0] * 100).plot(figsize=(20,15))
-plt.title("Standarized Indexes 1990-2016")
-plt.savefig("StandardizedData.png")
-plt.show()
-
-
+load_and_combine_data()
