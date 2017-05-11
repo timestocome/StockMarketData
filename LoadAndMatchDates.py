@@ -55,6 +55,7 @@ print("Loaded Russell", len(russell_2000))
 nasdaq = read_data('data/nasdaq.csv')
 print("Loaded NASDAQ", len(nasdaq))
 
+
 # VIX index that attempts to measure volatility of S&P, 
 # sometimes called 'fear index'
 vix = read_data('data/VIX.csv')
@@ -71,6 +72,16 @@ print("Loaded GDP, added missing day, filled in data")
 gold = read_data('data/GOLD.csv')
 gold = gold.interpolate()
 print("Loaded Gold", len(gold))
+
+
+unemployment = read_data('data/Unemployment.csv')
+unemployment = unemployment.resample("B").bfill()
+print("loaded Unemployment", len(unemployment))
+
+
+real_gdp = read_data('data/RealGDP.csv')
+real_gdp = real_gdp.resample("B").bfill()
+print("loaded real gdp", len(real_gdp))
 
 
 
@@ -98,6 +109,8 @@ russell_2000.columns = ['Russell 2000']
 nasdaq.columns = ["NASDAQ"]
 vix.columns = ['VIX']
 gdp.columns = ['US GDP']
+real_gdp.columns = ['Real GDP']
+unemployment.columns = ['UnEmploy']
 gold.columns = ['Gold']
 treasury.columns = ['1yr Treasury']
 bond.columns = ['10yr Bond']
@@ -112,6 +125,8 @@ indexes = indexes.join(gdp)
 indexes = indexes.join(gold)
 indexes = indexes.join(treasury)
 indexes = indexes.join(bond)
+indexes = indexes.join(real_gdp)
+indexes = indexes.join(unemployment)
 
 # print(indexes)
 
