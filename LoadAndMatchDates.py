@@ -119,7 +119,30 @@ def load_and_combine_data():
     # save file
     indexes.to_csv("StockData.csv")
 
+    return (indexes)
 
 
 
-load_and_combine_data()
+
+def add_volume(df):
+
+    # read in data files containing Volume data
+    dj = pd.read_csv('data/djia.csv', parse_dates=True, index_col=0)  
+    sp = pd.read_csv('data/S&P.csv', parse_dates=True, index_col=0)
+    russell = pd.read_csv('data/Russell2000.csv', parse_dates=True, index_col=0)
+    nasdaq = pd.read_csv('data/nasdaq.csv', parse_dates=True, index_col=0)
+
+    # pull out volume columns and add to dataframe
+    df['DJIA_Volume'] = dj['Volume']
+    df['S&P_Volume'] = sp_volume = sp['Volume']
+    df['Russell 2000_Volume'] = russell['Volume']
+    df['NASDAQ_Volume'] = nasdaq['Volume']
+
+    print(df)
+
+    # save file
+    df.to_csv('StockDataWithVolume.csv')
+
+
+df = load_and_combine_data()
+add_volume(df)
