@@ -119,16 +119,10 @@ model = pd.ols(x=data['step'], y=data['log 10yr Bond'])
 data['leveled log 10yr Bond'] = data['log 10yr Bond'] - (2.1900 - data['step'] * 0.0002)
 
 
+#print(data.columns.values)
+data = data[['leveled log Nasdaq','leveled log S&P', 'leveled log Russell', 'leveled log DJIA', 'leveled log Gold', 'leveled log 1yr Treasury','leveled log 10yr Bond']]
 
-leveled_log_data = data[['leveled log Nasdaq']]
-leveled_log_data = data[['leveled log S&P']]
-leveled_log_data = data[['leveled log DJIA']]
-leveled_log_data = data[['leveled log Russell']]
-leveled_log_data = data[['leveled log Gold']]
-leveled_log_data = data[['leveled log 1yr Treasury']]
-leveled_log_data = data[['leveled log 10yr Bond']]
-
-leveled_log_data.to_csv('LeveledLogStockData.csv')
+data.to_csv('LeveledLogStockData.csv')
 
 
 
